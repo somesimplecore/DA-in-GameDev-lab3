@@ -73,6 +73,53 @@ public class EnergyShield : MonoBehaviour
 ![](/Pics/z1_1.jpg)
 ![](/Pics/z1_2.jpg)
 
+- Практическая работа «Добавляем счетчик»
+Добавим в скрипт EnergyShield следующий код, который будет обнулять счетчик на старте и обновлять его при поимке яйца:
+```C#
+public TextMeshProUGUI scoreGT;
+void Start()
+    {
+        GameObject scoreGO = GameObject.Find("Score");
+        scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
+        scoreGT.text = "0";
+    }
+    private void OnCollisionEnter(Collision coll)
+    {
+        GameObject Collided = coll.gameObject;
+        if (Collided.tag == "Dragon Egg")
+            Destroy(Collided);
+        int score = int.Parse(scoreGT.text);
+        score += 1;
+        scoreGT.text = score.ToString();
+    }
+```
+
+В скрипт DragonPicker добавим метод, который будет уничтожать все яйца на сцене:
+```C#
+public void DragonEggDestroyed()
+    {
+        GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
+        foreach (GameObject tGO in tDragonEggArray)
+            Destroy(tGO);
+    }
+```
+
+Данный метода будем вызывать в скрипте DragonEgg, когда игроку не удасться поймать яйцо, тем самым мы будем уничтожать следующее.
+```C#
+void Update()
+    {
+        if(transform.position.y < bottomY)
+        {
+            Destroy(this.gameObject);
+            DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
+            apScript.DragonEggDestroyed();
+        }
+    }
+```
+
+- Практическая работа «Уменьшение жизни. Добавление текстуры»
+
+
 
 
 ## Задание 2
