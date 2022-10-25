@@ -200,11 +200,53 @@ public class OnlineChecker : MonoBehaviour
 ### Реализовать вывод в консоль количества времени отсутствия игрока в сети если пользователь офлайн.
 ### Ход работы:
 
+Немного перепишем скрипт из прошлого задания:
+```C#
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using YG;
+using System;
 
+public class OnlineChecker : MonoBehaviour
+{
+    public TextMeshProUGUI statusText;
+    public Image statusImage;
+    public DateTime LastLoginTime;
+    void Start()
+    {
+        statusText = GameObject.Find("StatusText").GetComponent<TextMeshProUGUI>();
+        statusImage = GameObject.Find("StatusImage").GetComponent<Image>();
+    }
+
+    void Update()
+    {
+        if(YandexGame.SDKEnabled)
+        {
+            statusText.text = "Online";
+            statusImage.color = Color.green;
+            LastLoginTime = DateTime.Now;
+        }
+        else
+        {
+
+            statusText.text = "Offline";
+            statusImage.color = Color.red;
+            var offlineDurationTime = DateTime.Now - LastLoginTime;
+            Debug.Log("Player offline " + offlineDurationTime.Days + " days, " 
+                + offlineDurationTime.Hours + " hours, " + offlineDurationTime.Minutes + " minutes.");
+        }
+    }
+}
+```
+
+В итоге мы можем получить вывод в консоль по типу:
+
+![](/Pics/z3_1.jpg)
 
 ## Выводы
 
-Мы сделали первые шаги по созданию игры Dragon Picker. Узнали, что в Unity есть удобный магазин с ассетами, в котором можно найти как платные, так и бесплатные продукты. Также мы познакомились с двумя игровыми площадками, на которых можно играть в HTML-5 игры. Каждая из платформ имеет похожий широкий функционал, однако эти платформы отличаются по игровым критериям.
+Мы сделали играбельный прототип игры Dragon Picker и выложили его на платформу Яндекс Игры. Познакомились с плагином Яндекс, сделали проверку статуса игрока(онлайн или оффлай) и вывод в коносль продолжительности отсутствия пользователя. Яндекс SDK имеет большое количество различных фич и с их помощью можно настроить проект самым разнообразным способом.
 
 | Plugin | README |
 | ------ | ------ |
