@@ -160,27 +160,37 @@ if (shieldList.Count == 0)
 https://yandex.ru/games/app/199729?draft=true&lang=ru
 
 ## Задание 2
-### В проект, выполненный в предыдущем задании, добавить систему проверки того, что SDK подключен (доступен в режиме онлайн и отвечает на запросы)
+### Добавить в приложение интерфейс для вывода статуса наличия игрока в сети (онлайн или офлайн)
 ### Ход Работы:
 
-Чтобы подключить SDK Яндекс к проекту, нужно добавить в заголовок head HTML-страницы строку следующего вида:
-```javascript
-<!-- Yandex Games SDK -->
-<script src="https://yandex.ru/games/sdk/v2"></script>
-```
-
-Далее требуется инициализировать SDK, используя метод init объекта YaGames:
-
+Чтобы вывести статус игрока(подключен ли к Яндекс SDK) напишем следующий скрипт:
 ```C#
-YaGames
-    .init()
-    .then(ysdk => {
-        console.log('Yandex SDK initialized');
-        window.ysdk = ysdk;
-    });
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using YG;
+
+public class OnlineChecker : MonoBehaviour
+{
+    public TextMeshProUGUI statusText;
+    public Image statusImage;
+    void Start()
+    {
+        statusText = GameObject.Find("StatusText").GetComponent<TextMeshProUGUI>();
+        statusImage = GameObject.Find("StatusImage").GetComponent<Image>();
+    }
+
+    void Update()
+    {
+        statusText.text = YandexGame.SDKEnabled == true ? "Online" : "Offline";
+        statusImage.color = YandexGame.SDKEnabled == true ? Color.green : Color.red;
+    }
+}
 ```
 
-При этом в консоли выведется сообщение, если все прошло успешно. Тем самым мы проверим, подключен ли SDK.
+Результат:
+
+![](/Pics/z2_1.jpg)
 
 ## Задание 3
 ### 1. Произвести сравнительный анализ игровых сервисов Яндекс Игры и VK Game;
