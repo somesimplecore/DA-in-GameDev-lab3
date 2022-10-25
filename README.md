@@ -41,121 +41,39 @@
 ## Задание 1
 ### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик.
 ### Ход работы:
-- Создание основных игровых объектов
+
+- Практическая работа «Механизм ловли объектов»
+Напишем код, с помощью которого реализуем передвижение энергетического щита с помощью курсора мыши и исчезновение яиц при пересечении:
+```C#
+using UnityEngine;
+
+public class EnergyShield : MonoBehaviour
+{
+    void Update()
+    {
+        Vector3 mousePos2D = Input.mousePosition;
+        mousePos2D.z = -Camera.main.transform.position.z;
+        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
+        Vector3 pos = this.transform.position;
+        pos.x = mousePos3D.x;
+        this.transform.position = pos;
+    }
+
+    private void OnCollisionEnter(Collision coll)
+    {
+        GameObject Collided = coll.gameObject;
+        if (Collided.tag == "Dragon Egg")
+            Destroy(Collided);
+    }
+}
+```
+Сам код привязываем к префабу энергетического щита.
+Также добавим объект Canvas с текстовым полем, в котором будет отображаться количество очков. Настройки Canvas и TMP:
 
 ![](/Pics/z1_1.jpg)
-
-- Реализация передвижения дракона и сбрасывания яиц
-
-```C#
-using UnityEngine;
-
-public class EnemyDragon : MonoBehaviour
-{
-    public GameObject dragonEggPrefab;
-    public float speed = 1;
-    public float timeBetweenEggDrop = 1f;
-    public float leftRightDistance = 10f;
-    public float chanceDirection = 0.1f;
-    void Start()
-    {
-        Invoke("DropEgg", 2f);
-    }
-    
-    void DropEgg()
-    {
-        Vector3 MyVector = new Vector3(0.0f, 5.0f, 0.0f);
-        GameObject egg = Instantiate<GameObject>(dragonEggPrefab);
-        egg.transform.position = transform.position + MyVector;
-        Invoke("DropEgg", timeBetweenEggDrop);
-    }
-
-    void Update()
-    {
-        Vector3 pos = transform.position;
-        pos.x += speed * Time.deltaTime;
-        transform.position = pos;
-
-        if(pos.x < -leftRightDistance)
-        {
-            speed = Mathf.Abs(speed);
-        }
-        else if (pos.x > leftRightDistance)
-        {
-            speed = -Mathf.Abs(speed);
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        if(Random.value < chanceDirection)
-        {
-            speed *= -1;
-        }
-    }
-}
-```
-
-- Добавление платформы и новых материалов
-
 ![](/Pics/z1_2.jpg)
 
-- Создание визуальных эффектов
 
-![](/Pics/z1_3.jpg)
-
-Скрипт поведения яйца:
-```C#
-using UnityEngine;
-
-public class DragonEgg : MonoBehaviour
-{
-    public static float bottomY = -30f;
-
-    private void OnTriggerEnter(Collider other)
-    {
-        ParticleSystem ps = GetComponent<ParticleSystem>();
-        var em = ps.emission;
-        em.enabled = true;
-
-        Renderer rend;
-        rend = GetComponent<Renderer>();
-        rend.enabled = false;
-    }
-
-    void Update()
-    {
-        if(transform.position.y < bottomY)
-        {
-            Destroy(this.gameObject);
-        }
-    }
-}
-```
-
-Скрипт DragonPicker для генерации щитов:
-
-```C#
-using UnityEngine;
-
-public class DragonPicker : MonoBehaviour
-{
-    public GameObject energyShieldPrefab;
-    public int numEnergyShield = 3;
-    public float energyShieldBottomY = -6f;
-    public float energyShieldRadius = 1.5f;
-    void Start()
-    {
-        for(int i = 1; i <= numEnergyShield; i++)
-        {
-            GameObject tShieldGo = Instantiate<GameObject>(energyShieldPrefab);
-            tShieldGo.transform.position = new Vector3(0, energyShieldBottomY, 0);
-            tShieldGo.transform.localScale = new Vector3(1 * i, 1 * i, 1 * i);
-        }
-    }
-}
-
-```
 
 ## Задание 2
 ### В проект, выполненный в предыдущем задании, добавить систему проверки того, что SDK подключен (доступен в режиме онлайн и отвечает на запросы)
