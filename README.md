@@ -78,49 +78,69 @@ public class EnergyShield : MonoBehaviour
 ```C#
 public TextMeshProUGUI scoreGT;
 void Start()
-    {
-        GameObject scoreGO = GameObject.Find("Score");
-        scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
-        scoreGT.text = "0";
-    }
-    private void OnCollisionEnter(Collision coll)
-    {
-        GameObject Collided = coll.gameObject;
-        if (Collided.tag == "Dragon Egg")
-            Destroy(Collided);
-        int score = int.Parse(scoreGT.text);
-        score += 1;
-        scoreGT.text = score.ToString();
-    }
+{
+    GameObject scoreGO = GameObject.Find("Score");
+    scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
+    scoreGT.text = "0";
+}
+private void OnCollisionEnter(Collision coll)
+{
+    GameObject Collided = coll.gameObject;
+    if (Collided.tag == "Dragon Egg")
+        Destroy(Collided);
+    int score = int.Parse(scoreGT.text);
+    score += 1;
+    scoreGT.text = score.ToString();
+}
 ```
 
 В скрипт DragonPicker добавим метод, который будет уничтожать все яйца на сцене:
 ```C#
 public void DragonEggDestroyed()
-    {
-        GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
-        foreach (GameObject tGO in tDragonEggArray)
-            Destroy(tGO);
-    }
+{
+    GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
+    foreach (GameObject tGO in tDragonEggArray)
+        Destroy(tGO);
+}
 ```
 
 Данный метода будем вызывать в скрипте DragonEgg, когда игроку не удасться поймать яйцо, тем самым мы будем уничтожать следующее.
 ```C#
 void Update()
+{
+    if(transform.position.y < bottomY)
     {
-        if(transform.position.y < bottomY)
-        {
-            Destroy(this.gameObject);
-            DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
-            apScript.DragonEggDestroyed();
-        }
+        Destroy(this.gameObject);
+        DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
+        apScript.DragonEggDestroyed();
     }
+}
 ```
 
 - Практическая работа «Уменьшение жизни. Добавление текстуры»
 
+Для реализации механики жизней игрока добавим в скрипт DragonPicker следующие строчки кода:
+В Start():
+```C#
+for(int i = 1; i <= numEnergyShield; i++)
+    shieldList.Add(tShieldGo);
+```
 
+В DragonEggDestroyed():
+```C#
+int shieldIndex = shieldList.Count - 1;
+GameObject tShieldGo = shieldList[shieldIndex];
+shieldList.RemoveAt(shieldIndex);
+Destroy(tShieldGo);
 
+if (shieldList.Count == 0)
+    SceneManager.LoadScene("_0Scene");
+```
+Таким образом, при уничтожении всех щитов сцена будет перезапускаться.
+
+Добавим немного визуальных эффектов из UnityAssetStore:
+
+![](/Pics/z1_3.jpg)
 
 ## Задание 2
 ### В проект, выполненный в предыдущем задании, добавить систему проверки того, что SDK подключен (доступен в режиме онлайн и отвечает на запросы)
