@@ -1,5 +1,5 @@
-# Интеграция сервиса для получения данных профиля пользователя.
-Отчет по лабораторной работе #2 выполнил(а):
+# Реализация рейтинговой системы пользователей и ее интеграция в пользовательский интерфейс
+Отчет по лабораторной работе #3 выполнил(а):
 - Паханов Александр Александрович
 - РИ-300018
 
@@ -36,183 +36,217 @@
 - ✨Magic ✨
 
 ## Цель работы
-Создание интерактивного приложения и изучение принципов интеграции в него игровых сервисов.
+Создание интерактивного приложения с рейтинговой системой пользователя и интеграция игровых сервисов в готовое приложение.
 
 ## Задание 1
-### По теме видео практических работ 1-5 повторить реализацию игры на Unity.
+### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик.
 ### Ход работы:
-- Создание основных игровых объектов
 
-![](/Pics/z1_1.jpg)
+- Практическая работа «Механизм ловли объектов»
 
-- Реализация передвижения дракона и сбрасывания яиц
-
+Напишем код, с помощью которого реализуем передвижение энергетического щита с помощью курсора мыши и исчезновение яиц при пересечении:
 ```C#
 using UnityEngine;
 
-public class EnemyDragon : MonoBehaviour
+public class EnergyShield : MonoBehaviour
 {
-    public GameObject dragonEggPrefab;
-    public float speed = 1;
-    public float timeBetweenEggDrop = 1f;
-    public float leftRightDistance = 10f;
-    public float chanceDirection = 0.1f;
-    void Start()
-    {
-        Invoke("DropEgg", 2f);
-    }
-    
-    void DropEgg()
-    {
-        Vector3 MyVector = new Vector3(0.0f, 5.0f, 0.0f);
-        GameObject egg = Instantiate<GameObject>(dragonEggPrefab);
-        egg.transform.position = transform.position + MyVector;
-        Invoke("DropEgg", timeBetweenEggDrop);
-    }
-
     void Update()
     {
-        Vector3 pos = transform.position;
-        pos.x += speed * Time.deltaTime;
-        transform.position = pos;
-
-        if(pos.x < -leftRightDistance)
-        {
-            speed = Mathf.Abs(speed);
-        }
-        else if (pos.x > leftRightDistance)
-        {
-            speed = -Mathf.Abs(speed);
-        }
+        Vector3 mousePos2D = Input.mousePosition;
+        mousePos2D.z = -Camera.main.transform.position.z;
+        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
+        Vector3 pos = this.transform.position;
+        pos.x = mousePos3D.x;
+        this.transform.position = pos;
     }
 
-    private void FixedUpdate()
+    private void OnCollisionEnter(Collision coll)
     {
-        if(Random.value < chanceDirection)
-        {
-            speed *= -1;
-        }
+        GameObject Collided = coll.gameObject;
+        if (Collided.tag == "Dragon Egg")
+            Destroy(Collided);
+    }
+}
+```
+Сам код привязываем к префабу энергетического щита.
+Также добавим объект Canvas с текстовым полем, в котором будет отображаться количество очков. Настройки Canvas и TMP:
+
+![](/Pics/z1_1.jpg)
+![](/Pics/z1_2.jpg)
+
+- Практическая работа «Добавляем счетчик»
+
+Добавим в скрипт EnergyShield следующий код, который будет обнулять счетчик на старте и обновлять его при поимке яйца:
+```C#
+public TextMeshProUGUI scoreGT;
+void Start()
+{
+    GameObject scoreGO = GameObject.Find("Score");
+    scoreGT = scoreGO.GetComponent<TextMeshProUGUI>();
+    scoreGT.text = "0";
+}
+private void OnCollisionEnter(Collision coll)
+{
+    GameObject Collided = coll.gameObject;
+    if (Collided.tag == "Dragon Egg")
+        Destroy(Collided);
+    int score = int.Parse(scoreGT.text);
+    score += 1;
+    scoreGT.text = score.ToString();
+}
+```
+
+В скрипт DragonPicker добавим метод, который будет уничтожать все яйца на сцене:
+```C#
+public void DragonEggDestroyed()
+{
+    GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
+    foreach (GameObject tGO in tDragonEggArray)
+        Destroy(tGO);
+}
+```
+
+Данный метода будем вызывать в скрипте DragonEgg, когда игроку не удасться поймать яйцо, тем самым мы будем уничтожать следующее.
+```C#
+void Update()
+{
+    if(transform.position.y < bottomY)
+    {
+        Destroy(this.gameObject);
+        DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
+        apScript.DragonEggDestroyed();
     }
 }
 ```
 
-- Добавление платформы и новых материалов
+- Практическая работа «Уменьшение жизни. Добавление текстуры»
 
-![](/Pics/z1_2.jpg)
+Для реализации механики жизней игрока добавим в скрипт DragonPicker следующие строчки кода:
+В Start():
+```C#
+for(int i = 1; i <= numEnergyShield; i++)
+    shieldList.Add(tShieldGo);
+```
 
-- Создание визуальных эффектов
+В DragonEggDestroyed():
+```C#
+int shieldIndex = shieldList.Count - 1;
+GameObject tShieldGo = shieldList[shieldIndex];
+shieldList.RemoveAt(shieldIndex);
+Destroy(tShieldGo);
+
+if (shieldList.Count == 0)
+    SceneManager.LoadScene("_0Scene");
+```
+Таким образом, при уничтожении всех щитов сцена будет перезапускаться.
+
+Добавим немного визуальных эффектов из UnityAssetStore:
 
 ![](/Pics/z1_3.jpg)
 
-Скрипт поведения яйца:
+- Практическая работа «Прибираемся в папке»
+
+После структурирования файлов проекта, мы имеем его следующий вид:
+
+![](/Pics/z1_4.jpg)
+
+Проверим, что мы перенесли все, что нам нужно:
+
+![](/Pics/z1_5.jpg)
+
+- Практическая работа «Интеграция игровых сервисов в готовое приложение»
+
+Встроим плагин Yandex Games в нашу игру, выставим необходимые настройки, сделаем и выложим билд в черновик Яндекс Игр. Результат:
+https://yandex.ru/games/app/199729?draft=true&lang=ru
+
+## Задание 2
+### Добавить в приложение интерфейс для вывода статуса наличия игрока в сети (онлайн или офлайн).
+### Ход Работы:
+
+Чтобы вывести статус игрока(подключен ли к Яндекс SDK) напишем следующий скрипт:
 ```C#
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using YG;
 
-public class DragonEgg : MonoBehaviour
+public class OnlineChecker : MonoBehaviour
 {
-    public static float bottomY = -30f;
-
-    private void OnTriggerEnter(Collider other)
+    public TextMeshProUGUI statusText;
+    public Image statusImage;
+    void Start()
     {
-        ParticleSystem ps = GetComponent<ParticleSystem>();
-        var em = ps.emission;
-        em.enabled = true;
-
-        Renderer rend;
-        rend = GetComponent<Renderer>();
-        rend.enabled = false;
+        statusText = GameObject.Find("StatusText").GetComponent<TextMeshProUGUI>();
+        statusImage = GameObject.Find("StatusImage").GetComponent<Image>();
     }
 
     void Update()
     {
-        if(transform.position.y < bottomY)
-        {
-            Destroy(this.gameObject);
-        }
+        statusText.text = YandexGame.SDKEnabled ? "Online" : "Offline";
+        statusImage.color = YandexGame.SDKEnabled ? Color.green : Color.red;
     }
 }
 ```
 
-Скрипт DragonPicker для генерации щитов:
+Результат при включенном игровом объекте YandexGame:
 
-```C#
-using UnityEngine;
+![](/Pics/z2_1.jpg)
 
-public class DragonPicker : MonoBehaviour
-{
-    public GameObject energyShieldPrefab;
-    public int numEnergyShield = 3;
-    public float energyShieldBottomY = -6f;
-    public float energyShieldRadius = 1.5f;
-    void Start()
-    {
-        for(int i = 1; i <= numEnergyShield; i++)
-        {
-            GameObject tShieldGo = Instantiate<GameObject>(energyShieldPrefab);
-            tShieldGo.transform.position = new Vector3(0, energyShieldBottomY, 0);
-            tShieldGo.transform.localScale = new Vector3(1 * i, 1 * i, 1 * i);
-        }
-    }
-}
+Результат при выключенном YandexGame(ситуация схожа с тем, если бы игрок не был онлайн):
 
-```
-
-## Задание 2
-### В проект, выполненный в предыдущем задании, добавить систему проверки того, что SDK подключен (доступен в режиме онлайн и отвечает на запросы)
-### Ход Работы:
-
-Чтобы подключить SDK Яндекс к проекту, нужно добавить в заголовок head HTML-страницы строку следующего вида:
-```javascript
-<!-- Yandex Games SDK -->
-<script src="https://yandex.ru/games/sdk/v2"></script>
-```
-
-Далее требуется инициализировать SDK, используя метод init объекта YaGames:
-
-```C#
-YaGames
-    .init()
-    .then(ysdk => {
-        console.log('Yandex SDK initialized');
-        window.ysdk = ysdk;
-    });
-```
-
-При этом в консоли выведется сообщение, если все прошло успешно. Тем самым мы проверим, подключен ли SDK.
+![](/Pics/z2_2.jpg)
 
 ## Задание 3
-### 1. Произвести сравнительный анализ игровых сервисов Яндекс Игры и VK Game;
-### 2. Дать сравнительную характеристику сервисов, описать функционал;
-### 3. Описать их методы интеграции с Unity;
-### 4. Произвести сравнение, сделать выводы;
-### 5. Подготовить реферат по результатам выполнения пунктов 1-4.
-### Реферат:
+### Реализовать вывод в консоль количества времени отсутствия игрока в сети если пользователь офлайн.
+### Ход работы:
 
-Яндекс игры и VK Game - это две игровые платформы, на которых можно играть в HTML-5 игры.
-Что общего у этих сервисов:
-- главная страница - это каталог с различными играми, отсортированными по популярности и на различные жанры;
-- профиль игрока;
-- категории игр по жанрам;
-- имеется поиск по ключевым словам;
-- отдельное поле с играми, в которые уже заходил(категория "Мои игры");
-- в большинство игр можно поиграть как на ПК, так и на телефоне;
-- в обоих сервисах можно сделать аккаунт разработчика и выкладывать свои игры, при прохождении проверки.
+Немного перепишем скрипт из прошлого задания:
+```C#
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using YG;
+using System;
 
-Различия:
-- VK Game интегрирован в профиль человека в социальной сети ВКонтакте, из-за чего игры могут быть также привязаны к различным сообществам или ивентам. В свою очередь, аккаунт Яндекс игр привязан к аккаунту Яндекс;
-- в играх VK Game есть много социальных фишек из-за привязки аккаунта к ВК;
-- в Яндекс Играх есть рекламные баннеры на главной странице;
-- у VK Game имеются игры, которые можно скачать(сервис привязан к Игры Mail.ru).
+public class OnlineChecker : MonoBehaviour
+{
+    public TextMeshProUGUI statusText;
+    public Image statusImage;
+    public DateTime LastLoginTime;
+    void Start()
+    {
+        statusText = GameObject.Find("StatusText").GetComponent<TextMeshProUGUI>();
+        statusImage = GameObject.Find("StatusImage").GetComponent<Image>();
+    }
 
-У VK Game взаимодействие с ВКонтакте происходит через библиотеку VK Bridge.
-На платформе Яндекс Игры используется SDK Яндекс.
+    void Update()
+    {
+        if(YandexGame.SDKEnabled)
+        {
+            statusText.text = "Online";
+            statusImage.color = Color.green;
+            LastLoginTime = DateTime.Now;
+        }
+        else
+        {
 
-Вывод:
-VK Games больше сосредоточена больше на социальные игры, т.к. она привязана к соц сети. В Яндекс больше одиночных игр, хотя в ней также присутствую проекты с онлайн составляющей. По своей сути эти два сервиса имеют довольно схожий функционал, который, в некоторых случаях, различается только в деталях.
+            statusText.text = "Offline";
+            statusImage.color = Color.red;
+            var offlineDurationTime = DateTime.Now - LastLoginTime;
+            Debug.Log("Player offline " + offlineDurationTime.Days + " days, " 
+                + offlineDurationTime.Hours + " hours, " + offlineDurationTime.Minutes + " minutes.");
+        }
+    }
+}
+```
+
+В итоге мы можем получить вывод в консоль по типу:
+
+![](/Pics/z3_1.jpg)
 
 ## Выводы
 
-Мы сделали первые шаги по созданию игры Dragon Picker. Узнали, что в Unity есть удобный магазин с ассетами, в котором можно найти как платные, так и бесплатные продукты. Также мы познакомились с двумя игровыми площадками, на которых можно играть в HTML-5 игры. Каждая из платформ имеет похожий широкий функционал, однако эти платформы отличаются по игровым критериям.
+Мы сделали играбельный прототип игры Dragon Picker и выложили его на платформу Яндекс Игры. Познакомились с плагином Яндекс, сделали проверку статуса игрока(онлайн или оффлай) и вывод в коносль продолжительности отсутствия пользователя. Яндекс SDK имеет большое количество различных фич и с их помощью можно настроить проект самым разнообразным способом.
 
 | Plugin | README |
 | ------ | ------ |
